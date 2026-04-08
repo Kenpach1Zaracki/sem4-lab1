@@ -14,53 +14,41 @@ const Login = () => {
 
   const handleSubmit = e => {
     e.preventDefault()
-    // Ищем пользователя с таким email и паролем
     api.get(`/users?email=${form.email}&password=${form.password}`)
       .then(response => {
         if (response.data.length === 0) {
           setError('Неверный email или пароль')
           return
         }
-        const user = response.data[0]
-        saveUser(user)
+        saveUser(response.data[0])
         navigate('/')
       })
-      .catch(() => {
-        setError('Ошибка подключения к серверу')
-      })
+      .catch(() => setError('Ошибка подключения к серверу'))
   }
 
   return (
-    <div>
-      <h1>Вход в систему</h1>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email:
-          <input
-            type='email'
-            name='email'
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <br />
-        <label>
-          Пароль:
-          <input
-            type='password'
-            name='password'
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <br />
-        <button type='submit'>Войти</button>
-      </form>
-      <br />
-      <Link to='/register'>Зарегистрироваться</Link>
+    <div className='auth-page'>
+      <div className='auth-card'>
+        <div className='auth-logo'>SAFE<span>TRACK</span></div>
+        <div className='auth-subtitle'>Система учёта инцидентов</div>
+        {error && <div className='server-error'>{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className='form-group'>
+            <label className='form-label'>Email</label>
+            <input className='form-input' type='email' name='email' value={form.email} onChange={handleChange} required />
+          </div>
+          <div className='form-group'>
+            <label className='form-label'>Пароль</label>
+            <input className='form-input' type='password' name='password' value={form.password} onChange={handleChange} required />
+          </div>
+          <button type='submit' className='btn btn-primary' style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
+            Войти
+          </button>
+        </form>
+        <div className='auth-footer'>
+          <Link to='/register' className='auth-link'>Зарегистрироваться</Link>
+        </div>
+      </div>
     </div>
   )
 }
