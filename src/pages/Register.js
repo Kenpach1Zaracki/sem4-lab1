@@ -10,12 +10,11 @@ const Register = () => {
   const [serverError, setServerError] = useState(null)
 
   const validate = () => {
-    const newErrors = {}
-    if (!form.name.trim()) newErrors.name = 'Укажите имя'
-    if (!form.email.trim()) newErrors.email = 'Укажите email'
-    if (!form.password.trim()) newErrors.password = 'Укажите пароль'
-    if (form.password.length < 6) newErrors.password = 'Пароль минимум 6 символов'
-    return newErrors
+    const e = {}
+    if (!form.name.trim()) e.name = 'Укажите имя'
+    if (!form.email.trim()) e.email = 'Укажите email'
+    if (form.password.length < 6) e.password = 'Пароль минимум 6 символов'
+    return e
   }
 
   const handleChange = e => {
@@ -25,74 +24,47 @@ const Register = () => {
 
   const handleSubmit = e => {
     e.preventDefault()
-    const validationErrors = validate()
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      return
-    }
-    // Проверяем что email не занят
+    const ve = validate()
+    if (Object.keys(ve).length > 0) { setErrors(ve); return }
     api.get(`/users?email=${form.email}`)
-      .then(response => {
-        if (response.data.length > 0) {
-          setErrors({ email: 'Пользователь с таким email уже существует' })
-          return
-        }
-        // Регистрируем нового пользователя с ролью investigator
-        const newUser = { ...form, role: 'investigator' }
-        return api.post('/users', JSON.stringify(newUser))
+      .then(res => {
+        if (res.data.length > 0) { setErrors({ email: 'Email уже занят' }); return }
+        return api.post('/users', JSON.stringify({ ...form, role: 'investigator' }))
       })
-      .then(response => {
-        if (!response) return
-        saveUser(response.data)
-        navigate('/')
-      })
-      .catch(() => {
-        setServerError('Ошибка регистрации. Попробуйте позже.')
-      })
+      .then(res => { if (res) { saveUser(res.data); navigate('/') } })
+      .catch(() => setServerError('Ошибка регистрации. Попробуйте позже.'))
   }
 
   return (
-    <div>
-      <h1>Регистрация</h1>
-      {serverError && <div style={{ color: 'red' }}>{serverError}</div>}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Имя:
-          <input
-            type='text'
-            name='name'
-            value={form.name}
-            onChange={handleChange}
-          />
-        </label>
-        {errors.name && <div style={{ color: 'red' }}>{errors.name}</div>}
-        <br />
-        <label>
-          Email:
-          <input
-            type='email'
-            name='email'
-            value={form.email}
-            onChange={handleChange}
-          />
-        </label>
-        {errors.email && <div style={{ color: 'red' }}>{errors.email}</div>}
-        <br />
-        <label>
-          Пароль:
-          <input
-            type='password'
-            name='password'
-            value={form.password}
-            onChange={handleChange}
-          />
-        </label>
-        {errors.password && <div style={{ color: 'red' }}>{errors.password}</div>}
-        <br />
-        <button type='submit'>Зарегистрироваться</button>
-      </form>
-      <br />
-      <Link to='/login'>Уже есть аккаунт? Войти</Link>
+    <div className='auth-page'>
+      <div className='auth-card'>
+        <div className='auth-logo'>SAFE<span>TRACK</span></div>
+        <div className='auth-subtitle'>Создать аккаунт</div>
+        {serverError && <div className='server-error'>{serverError}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className='form-group'>
+            <label className='form-label'>Имя</label>
+            <input className='form-input' type='text' name='name' value={form.name} onChange={handleChange} />
+            {errors.name && <div className='form-error'>{errors.name}</div>}
+          </div>
+          <div className='form-group'>
+            <label className='form-label'>Email</label>
+            <input className='form-input' type='email' name='email' value={form.email} onChange={handleChange} />
+            {errors.email && <div className='form-error'>{errors.email}</div>}
+          </div>
+          <div className='form-group'>
+            <label className='form-label'>Пароль</label>
+            <input className='form-input' type='password' name='password' value={form.password} onChange={handleChange} />
+            {errors.password && <div className='form-error'>{errors.password}</div>}
+          </div>
+          <button type='submit' className='btn btn-primary' style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
+            Зарегистрироваться
+          </button>
+        </form>
+        <div className='auth-footer'>
+          <Link to='/login' className='auth-link'>Уже есть аккаунт? Войти</Link>
+        </div>
+      </div>
     </div>
   )
 }
