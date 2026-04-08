@@ -6,7 +6,8 @@
       "location": "Цех №3 (сборочный)",
       "description": "Работник получил травму руки при работе с прессовым оборудованием без защитных перчаток.",
       "severity": "Средняя",
-      "status": "Расследуется"
+      "status": "Расследуется",
+      "assignedTo": "ivanov@plant.ru"
     },
     {
       "id": "2",
@@ -14,7 +15,8 @@
       "location": "Склад ГСМ",
       "description": "Обнаружено курение в зоне хранения горюче-смазочных материалов.",
       "severity": "Высокая",
-      "status": "Устранено"
+      "status": "Расследуется",
+      "assignedTo": "petrov@plant.ru"
     },
     {
       "id": "3",
@@ -22,7 +24,8 @@
       "location": "Электрощитовая",
       "description": "Зафиксировано короткое замыкание в распределительном щите. Возгорание предотвращено.",
       "severity": "Высокая",
-      "status": "Устранено"
+      "status": "Устранено",
+      "assignedTo": "ivanov@plant.ru"
     },
     {
       "id": "4",
@@ -30,8 +33,31 @@
       "location": "Цех №1 (литейный)",
       "description": "Сотрудник работал без средств индивидуальной защиты органов дыхания в зоне задымления.",
       "severity": "Лёгкая",
-      "status": "На рассмотрении"
+      "status": "На рассмотрении",
+      "assignedTo": "petrov@plant.ru"
     }
   ],
-  "$schema": "./node_modules/json-server/schema.json"
+  "users": [
+    {
+      "id": "1",
+      "name": "Администратор",
+      "email": "admin@plant.ru",
+      "password": "admin123",
+      "role": "admin"
+    },
+    {
+      "id": "2",
+      "name": "Иванов И.И.",
+      "email": "ivanov@plant.ru",
+      "password": "ivanov123",
+      "role": "investigator"
+    },
+    {
+      "id": "3",
+      "name": "Петров П.П.",
+      "email": "petrov@plant.ru",
+      "password": "petrov123",
+      "role": "investigator"
+    }
+  ]
 }
