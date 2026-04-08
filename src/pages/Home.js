@@ -3,6 +3,24 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { getUser, removeUser } from '../auth'
 
+const getSeverityClass = (s) => {
+  if (s === 'Лёгкая') return 'low'
+  if (s === 'Средняя') return 'mid'
+  return 'high'
+}
+
+const getStatusClass = (s) => {
+  if (s === 'На рассмотрении') return 'reviewing'
+  if (s === 'Расследуется') return 'investigating'
+  return 'resolved'
+}
+
+const getStatusLabel = (s) => {
+  if (s === 'На рассмотрении') return 'Рассмотрение'
+  if (s === 'Расследуется') return 'Расследуется'
+  return 'Устранено'
+}
+
 const Home = () => {
   const [incidents, setIncidents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -14,7 +32,6 @@ const Home = () => {
     api.get('/incidents')
       .then(response => {
         let data = response.data
-        // Если роль investigator — показываем только его инциденты
         if (currentUser.role === 'investigator') {
           data = data.filter(inc => inc.assignedTo === currentUser.email)
         }
@@ -22,19 +39,15 @@ const Home = () => {
         setLoading(false)
       })
       .catch(() => {
-        setError('Не удалось загрузить данные. Проверьте подключение к серверу.')
+        setError('Не удалось загрузить данные.')
         setLoading(false)
       })
   }, [])
 
   const handleDelete = id => {
     api.delete(`/incidents/${id}`)
-      .then(() => {
-        setIncidents(incidents.filter(item => item.id !== id))
-      })
-      .catch(() => {
-        setError('Не удалось удалить инцидент.')
-      })
+      .then(() => setIncidents(incidents.filter(item => item.id !== id)))
+      .catch(() => setError('Не удалось удалить инцидент.'))
   }
 
   const handleLogout = () => {
@@ -42,46 +55,85 @@ const Home = () => {
     navigate('/login')
   }
 
-  if (loading) return <div>Загрузка данных...</div>
-  if (error) return <div style={{ color: 'red' }}>{error}</div>
+  if (loading) return <div className='loading'>Загрузка данных</div>
+  if (error) return <div className='page'><div className='server-error'>{error}</div></div>
+
+  const total = incidents.length
+  const active = incidents.filter(i => i.status === 'Расследуется').length
+  const high = incidents.filter(i => i.severity === 'Высокая').length
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Реестр инцидентов на производстве</h1>
-        <div>
-          <span>
-            {currentUser.name} ({currentUser.role === 'admin' ? 'Администратор' : 'Расследователь'})
-          </span>
-          <button onClick={handleLogout} style={{ marginLeft: '10px' }}>
-            Выйти
-          </button>
+    <div className='page'>
+      <div className='header'>
+        <div className='header-left'>
+          <h1>SAFE<span>TRACK</span></h1>
+          <div className='subtitle'>// Система учёта производственных инцидентов</div>
+        </div>
+        <div className='header-right'>
+          <div className='user-badge'>
+            <span className='user-name'>{currentUser.name}</span>
+            <span className={`role-tag ${currentUser.role}`}>
+              {currentUser.role === 'admin' ? 'Admin' : 'Investigator'}
+            </span>
+          </div>
+          <button className='btn-logout' onClick={handleLogout}>Выйти</button>
         </div>
       </div>
 
-      {currentUser.role === 'admin' && (
-        <Link to='/add'>Добавить инцидент</Link>
-      )}
+      <div className='stats-row'>
+        <div className='stat-card'>
+          <div className='stat-number'>{total}</div>
+          <div className='stat-label'>Всего инцидентов</div>
+        </div>
+        <div className='stat-card'>
+          <div className='stat-number'>{active}</div>
+          <div className='stat-label'>Расследуется</div>
+        </div>
+        <div className='stat-card'>
+          <div className='stat-number'>{high}</div>
+          <div className='stat-label'>Высокая тяжесть</div>
+        </div>
+      </div>
 
-      <ul>
-        {incidents.map(incident => (
-          <li key={incident.id}>
-            <strong>{incident.type}</strong> — {incident.location} — {incident.severity}
-            <br />
-            <small>Назначен: {incident.assignedTo || 'не назначен'}</small>
-            <br />
-            <Link to={`/detail/${incident.id}`}>Подробнее / Редактировать</Link>
-            {currentUser.role === 'admin' && (
-              <button
-                onClick={() => handleDelete(incident.id)}
-                style={{ marginLeft: '10px' }}
-              >
-                Удалить
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+      <div className='toolbar'>
+        <div className='toolbar-left'>// {total} записей</div>
+        {currentUser.role === 'admin' && (
+          <Link to='/add' className='btn btn-primary'>+ Добавить инцидент</Link>
+        )}
+      </div>
+
+      {incidents.length === 0 ? (
+        <div className='empty-state'>Нет инцидентов</div>
+      ) : (
+        <ul className='incident-list'>
+          {incidents.map(incident => (
+            <li key={incident.id} className='incident-item'>
+              <div className={`severity-bar ${getSeverityClass(incident.severity)}`} />
+              <div className='incident-main'>
+                <div className='incident-type'>{incident.type}</div>
+                <div className='incident-meta'>
+                  <span className='meta-tag'>{incident.location}</span>
+                  <span className='meta-tag'>{incident.severity}</span>
+                  {incident.assignedTo && (
+                    <span className='meta-tag'>{incident.assignedTo}</span>
+                  )}
+                </div>
+              </div>
+              <div className='incident-actions'>
+                <span className={`status-badge ${getStatusClass(incident.status)}`}>
+                  {getStatusLabel(incident.status)}
+                </span>
+                <Link to={`/detail/${incident.id}`} className='btn btn-ghost'>Открыть</Link>
+                {currentUser.role === 'admin' && (
+                  <button className='btn btn-danger' onClick={() => handleDelete(incident.id)}>
+                    Удалить
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
