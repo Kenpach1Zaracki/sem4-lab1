@@ -1,3 +1,4 @@
+import { sendRealEmail } from '../emailService'
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api'
@@ -36,14 +37,16 @@ const Form = () => {
   }
 
   const handleSubmit = e => {
-    e.preventDefault()
-    const ve = validate()
-    if (Object.keys(ve).length > 0) { setErrors(ve); return }
-    api.post('/incidents', JSON.stringify(newIncident))
-      .then(() => navigate('/'))
-      .catch(() => setServerError('Не удалось добавить инцидент. Попробуйте позже.'))
-  }
-
+  e.preventDefault()
+  const ve = validate()
+  if (Object.keys(ve).length > 0) { setErrors(ve); return }
+  api.post('/incidents', JSON.stringify(newIncident))
+    .then(async (response) => {
+      await sendRealEmail('CREATE', response.data || newIncident)
+      navigate('/')
+    })
+    .catch(() => setServerError('Не удалось добавить инцидент. Попробуйте позже.'))
+}
   return (
     <div className='page'>
       <Link to='/' className='back-link'>Назад к реестру</Link>
