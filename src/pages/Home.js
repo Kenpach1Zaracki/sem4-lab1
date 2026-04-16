@@ -124,11 +124,9 @@ const Home = () => {
                   {getStatusLabel(incident.status)}
                 </span>
                 <Link to={`/detail/${incident.id}`} className='btn btn-ghost'>Открыть</Link>
-                {currentUser.role === 'admin' && (
-                  <button className='btn btn-danger' onClick={() => handleDelete(incident.id)}>
-                    Удалить
-                  </button>
-                )}
+                <button className='btn btn-danger' onClick={() => handleDelete(incident.id)}>
+	                Удалить
+                </button>
               </div>
             </li>
           ))}
