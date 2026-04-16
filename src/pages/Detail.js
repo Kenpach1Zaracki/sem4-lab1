@@ -1,3 +1,4 @@
+import { sendRealEmail } from '../emailService'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api } from '../api'
@@ -34,14 +35,17 @@ const Detail = () => {
   }
 
   const handleSubmit = e => {
-    e.preventDefault()
-    const ve = validate()
-    if (Object.keys(ve).length > 0) { setErrors(ve); return }
-    api.put(`/incidents/${id}`, JSON.stringify(incident))
-      .then(() => navigate('/'))
-      .catch(() => setServerError('Не удалось сохранить изменения.'))
-  }
-
+  e.preventDefault()
+  const ve = validate()
+  if (Object.keys(ve).length > 0) { setErrors(ve); return }
+  api.put(`/incidents/${id}`, JSON.stringify(incident))
+    .then(async (response) => {
+      const updatedData = { ...response.data, id: id }
+      await sendRealEmail('UPDATE', updatedData)
+      navigate('/')
+    })
+    .catch(() => setServerError('Не удалось сохранить изменения.'))
+}
   if (loading) return <div className='loading'>Загрузка</div>
   if (serverError) return <div className='page'><div className='server-error'>{serverError}</div></div>
 
