@@ -1,3 +1,4 @@
+import { sendRealEmail } from '../emailService'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
@@ -44,11 +45,16 @@ const Home = () => {
       })
   }, [])
 
-  const handleDelete = id => {
-    api.delete(`/incidents/${id}`)
-      .then(() => setIncidents(incidents.filter(item => item.id !== id)))
+  const handleDelete = (incident) => {
+  if (window.confirm(`Удалить инцидент "${incident.type}"?`)) {
+    api.delete(`/incidents/${incident.id}`)
+      .then(async () => {
+        await sendRealEmail('DELETE', incident)
+        setIncidents(incidents.filter(item => item.id !== incident.id))
+      })
       .catch(() => setError('Не удалось удалить инцидент.'))
   }
+}
 
   const handleLogout = () => {
     removeUser()
@@ -124,7 +130,7 @@ const Home = () => {
                   {getStatusLabel(incident.status)}
                 </span>
                 <Link to={`/detail/${incident.id}`} className='btn btn-ghost'>Открыть</Link>
-                <button className='btn btn-danger' onClick={() => handleDelete(incident.id)}>
+                <button className='btn btn-danger' onClick={() => handleDelete(incident)}>
 	                Удалить
                 </button>
               </div>
